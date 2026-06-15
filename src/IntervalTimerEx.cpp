@@ -8,13 +8,16 @@ IntervalTimerEx::~IntervalTimerEx()
 
 void IntervalTimerEx::end()
 {
-    callbacks[index] = nullptr;
     IntervalTimer::end();
+    uint32_t primask;
+    asm volatile("mrs %0, primask\n\t cpsid i" : "=r"(primask)::"memory");
+    callbacks[index] = nullptr;
+    asm volatile("msr primask, %0" ::"r"(primask) : "memory");
 }
 
 
 // generate and preset the callback storage
-callback_t IntervalTimerEx::callbacks[4]{
+timer_callback_t IntervalTimerEx::callbacks[4]{
     nullptr,
     nullptr,
     nullptr,
