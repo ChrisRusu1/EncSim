@@ -17,7 +17,7 @@ void IntervalTimerEx::end()
 
 
 // generate and preset the callback storage
-callback_t IntervalTimerEx::callbacks[4]{
+IntervalTimerEx::callback_t IntervalTimerEx::callbacks[4]{
     nullptr,
     nullptr,
     nullptr,
@@ -26,7 +26,7 @@ callback_t IntervalTimerEx::callbacks[4]{
 
 #if defined (USE_CPP11_CALLBACKS)
 
-relay_t IntervalTimerEx::relays[4]{
+IntervalTimerEx::relay_t IntervalTimerEx::relays[4]{
     [] { callbacks[0](); },
     [] { callbacks[1](); },
     [] { callbacks[2](); },
