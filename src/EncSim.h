@@ -35,6 +35,12 @@ class EncSim
     EncSim& setBounceDurationMax(unsigned microseconds);
     EncSim& setContinousMode(bool on = true);  // true -> continous mode, false->target mode (default)
 
+    // Store the NVIC priority to re-apply after every begin() call.
+    // IntervalTimer::begin() resets the priority to default each time it
+    // arms the PIT, so the priority must be stored and re-applied inside
+    // moveAbsAsync() after each begin().
+    void setTimerPriority(uint8_t priority) { _timerPriority = priority; }
+
  protected:
     void pitISR()
     {
@@ -70,6 +76,8 @@ class EncSim
 
     unsigned A, B, Z;
     unsigned period;
+
+    uint8_t _timerPriority{128}; // NVIC priority re-applied after each mainTimer.begin()
 
     BouncingPin phaseA, phaseB;
     IntervalTimerEx mainTimer;

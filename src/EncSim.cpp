@@ -39,7 +39,12 @@ void EncSim::moveAbsAsync(int _target)
     direction = (target >= current) ? 1 : -1;
 
     if (!running)
-        mainTimer.begin([this] {pitISR(); }, T[current & 1]);
+    {
+        mainTimer.begin([this] { pitISR(); }, T[current & 1]);
+        // IntervalTimer::begin() resets the NVIC priority to default; re-apply
+        // the stored priority so EncSim always runs at the intended level.
+        mainTimer.priority(_timerPriority);
+    }
     running = true;
 }
 
