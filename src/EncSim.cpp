@@ -30,22 +30,29 @@ EncSim& EncSim::begin(/*unsigned pinA, unsigned pinB, int pinZ*/)
     return *this;
 }
 
+// The whole retarget/arm sequence runs with interrupts off: pitISR() can call stop()
+// between the running test and the arm, which would strand running=true with a dead timer.
 void EncSim::moveAbsAsync(int _target)
 {
-    if (_target == current)
-        return;
+    uint32_t primask;
+    asm volatile("mrs %0, primask\n\t cpsid i" : "=r"(primask)::"memory");
 
-    target = _target;
-    direction = (target >= current) ? 1 : -1;
-
-    if (!running)
+    if (_target != this->current)
     {
-        mainTimer.begin([this] { pitISR(); }, T[current & 1]);
-        // IntervalTimer::begin() resets the NVIC priority to default; re-apply
-        // the stored priority so EncSim always runs at the intended level.
-        mainTimer.priority(_timerPriority);
+        this->target = _target;
+        this->direction = (this->target >= this->current) ? 1 : -1;
+
+        if (!this->running)
+        {
+            this->running = this->mainTimer.begin([this] { this->pitISR(); }, this->T[this->current & 1]);
+            // IntervalTimer::begin() resets the NVIC priority to default; re-apply
+            // the stored priority so EncSim always runs at the intended level.
+            if (this->running)
+                this->mainTimer.priority(this->_timerPriority);
+        }
     }
-    running = true;
+
+    asm volatile("msr primask, %0" ::"r"(primask) : "memory");
 }
 
 // start relative move and return immediately

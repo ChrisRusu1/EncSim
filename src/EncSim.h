@@ -45,7 +45,9 @@ class EncSim
     void pitISR()
     {
         current += direction;
-        if (current == target && !continousMode )
+        // Direction-aware, not ==: a retarget from loop context can move target past current.
+        const bool reached = (direction > 0) ? (current >= target) : (current <= target);
+        if (reached && !continousMode )
         {
             stop();
         } else
@@ -65,13 +67,14 @@ class EncSim
         }
     }
 
-    int direction;
-    int target;
+    // Shared with pitISR(); moveAbsAsync() must not let the compiler cache these.
+    volatile int direction;
+    volatile int target;
 
     float frequency;
     float phase;
     float T[2];
-    bool running = false;
+    volatile bool running = false;
     bool continousMode = false;
 
     unsigned A, B, Z;
